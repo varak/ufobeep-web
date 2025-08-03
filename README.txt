@@ -1,43 +1,46 @@
-# UFOBeep Backend Test Data Package
+# UFOBeep - Real-time UFO Sighting Alerts
 
-This zip includes a sample dataset of 10 recent sightings in `mock_sightings.json`.
+UFOBeep is a real-time UFO sighting alert system with WebSocket-powered notifications, interactive mapping, and mobile app support.
 
-## 📥 To install on the backend server:
+## 🌐 Access Points
 
-1. SCP the file to your server:
+- **Main Site**: https://ufobeep.com/
+- **Mobile App**: https://ufobeep.com/app/
+- **Live Map**: https://ufobeep.com/map/
+- **API Endpoint**: https://ufobeep.com:8000/
 
-```bash
-scp /path/to/ufo_backend_sightings_test.zip USER@SERVER:/var/www/ufobeep.com/html/
-```
+## 📱 Features
 
-2. SSH into your server:
+- **Swipe Navigation**: Gesture-based navigation between Camera, Map, and Alerts screens
+- **Multilingual Support**: Auto-detects browser language (English, Spanish supported)
+- **Real-time Alerts**: WebSocket-powered proximity notifications
+- **Interactive Map**: Live sightings with location data
+- **Settings Modal**: Easy access to preferences and about info
+- **Cross-platform**: Works on web and mobile devices
 
-```bash
-ssh USER@SERVER
-cd /var/www/ufobeep.com/html/
-```
+## 🛠 Deployment
 
-3. Unzip the package:
+The system runs on:
+- **Backend**: FastAPI with WebSocket support (port 8000)
+- **Frontend**: Static HTML/CSS/JS with PWA capabilities
+- **Database**: SQLite with async operations
+- **File Storage**: Local uploads with static serving
 
-```bash
-unzip ufo_backend_sightings_test.zip
-```
+## 📊 URL Structure
 
-4. You’ll now have a file: `mock_sightings.json` with this structure:
+- `/` - Main landing page
+- `/app/` - Mobile web application
+- `/map/` - Interactive sightings map
+- `/api/` - REST API endpoints (port 8000)
+- `/static/uploads/` - User-uploaded sighting images
 
-```json
-[
-  {
-    "id": "UFB-0001",
-    "userFlag": "🇨🇦",
-    "distanceKm": 105.8,
-    "time": "2025-08-02T01:15:22Z",
-    "imageUrl": "https://...",
-    "lat": 36.998,
-    "lon": -124.011
-  },
-  ...
-]
-```
+## 🔧 Development
 
-This can be loaded for API testing, map overlays, or mock alert generation.
+To add new languages:
+1. Create language pack in `ufobeep-v2-app/src/i18n/[lang].js`
+2. Add language code to `availableLanguages` array
+3. Update language loading in `loadLanguagePacks()` method
+
+## 📦 Mock Data
+
+Test data available in `mock_sightings.json` for API testing and development.

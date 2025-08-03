@@ -2,14 +2,24 @@
 class UFOBeepApp {
     constructor() {
         this.currentScreen = 'camera';
+        this.currentScreenIndex = 0;
+        this.mainScreens = ['camera', 'map', 'alerts']; // Main swipable screens
         this.ws = null;
         this.map = null;
         this.userLocation = null;
         this.deviceOrientation = 0;
         this.sightings = [];
         this.isConnected = false;
-        this.apiUrl = 'https://ufobeep.com';
-        this.wsUrl = 'wss://ufobeep.com';
+        this.apiUrl = 'https://ufobeep.com:8000';
+        this.wsUrl = 'wss://ufobeep.com:8000';
+        
+        // Touch/Swipe handling
+        this.touchStartX = 0;
+        this.touchStartY = 0;
+        this.touchEndX = 0;
+        this.touchEndY = 0;
+        this.isSwipeGesture = false;
+        this.minSwipeDistance = 50;
         
         // User settings
         this.settings = {
@@ -17,14 +27,104 @@ class UFOBeepApp {
             notifications: true,
             sounds: true,
             autoUpload: true,
-            alertRange: 50
+            alertRange: 50,
+            language: 'auto' // auto-detect or specific language code
         };
+
+        // Multilingual support - will be loaded dynamically
+        this.languages = {};
+        this.availableLanguages = ['en', 'es']; // Add more as we create them
+        this.currentLanguage = 'en';
         
+        // Load language packs
+        this.loadLanguagePacks();
+        
+        this.loadSettings();
+        this.detectLanguage();
         this.init();
     }
 
+    loadLanguagePacks() {
+        // Inline language packs for now (later we can load from separate files)
+        this.languages.en = {
+            name: 'English',
+            code: 'en',
+            nativeName: 'English',
+            flag: '🇺🇸',
+            strings: {
+                'app.title': 'UFOBeep',
+                'app.version': 'Version 2.01',
+                'screen.camera': '📷 Report Sighting',
+                'screen.map': '🗺️ Live Sightings',
+                'screen.alerts': '🚨 Proximity Alerts',
+                'screen.radar': '📡 UFO Radar',
+                'screen.profile': '👤 Profile',
+                'settings.title': '⚙️ Settings',
+                'settings.country': 'Country Flag',
+                'settings.range': 'Alert Range',
+                'settings.notifications': 'Notifications',
+                'settings.sounds': 'Sound Alerts',
+                'settings.autoUpload': 'Auto-Upload Photos',
+                'settings.language': 'Language',
+                'settings.about': 'About',
+                'settings.save': 'Save Settings',
+                'button.capture': '📸 CAPTURE',
+                'button.scan': 'SCAN',
+                'button.scanning': 'SCANNING...',
+                'status.location': '📍 Getting location...',
+                'status.compass': '🧭 Calibrating compass...',
+                'alert.success': '🛸 Sighting reported successfully!',
+                'alert.error': 'Failed to upload sighting',
+                'alert.proximity': '🛸 UFO Sighting Alert',
+                'alert.proximity.body': 'New sighting reported nearby. Tap to view details.',
+                'alert.camera': 'Camera not available',
+                'alert.location': 'Please wait for GPS location',
+                'no.alerts': 'No recent alerts',
+                'no.alerts.desc': 'You\'ll be notified of sightings within {range}km'
+            }
+        };
+
+        this.languages.es = {
+            name: 'Español',
+            code: 'es',
+            nativeName: 'Español',
+            flag: '🇪🇸',
+            strings: {
+                'app.title': 'UFOBeep',
+                'app.version': 'Versión 2.01',
+                'screen.camera': '📷 Reportar Avistamiento',
+                'screen.map': '🗺️ Avistamientos en Vivo',
+                'screen.alerts': '🚨 Alertas de Proximidad',
+                'screen.radar': '📡 Radar OVNI',
+                'screen.profile': '👤 Perfil',
+                'settings.title': '⚙️ Configuración',
+                'settings.country': 'Bandera del País',
+                'settings.range': 'Rango de Alerta',
+                'settings.notifications': 'Notificaciones',
+                'settings.sounds': 'Alertas de Sonido',
+                'settings.autoUpload': 'Subida Automática de Fotos',
+                'settings.language': 'Idioma',
+                'settings.about': 'Acerca de',
+                'settings.save': 'Guardar Configuración',
+                'button.capture': '📸 CAPTURAR',
+                'button.scan': 'ESCANEAR',
+                'button.scanning': 'ESCANEANDO...',
+                'status.location': '📍 Obteniendo ubicación...',
+                'status.compass': '🧭 Calibrando brújula...',
+                'alert.success': '🛸 ¡Avistamiento reportado exitosamente!',
+                'alert.error': 'Error al subir avistamiento',
+                'alert.proximity': '🛸 Alerta de Avistamiento OVNI',
+                'alert.proximity.body': 'Nuevo avistamiento reportado cerca. Toca para ver detalles.',
+                'alert.camera': 'Cámara no disponible',
+                'alert.location': 'Por favor espera la ubicación GPS',
+                'no.alerts': 'Sin alertas recientes',
+                'no.alerts.desc': 'Serás notificado de avistamientos dentro de {range}km'
+            }
+        };
+    }
+
     async init() {
-        console.log('🛸 UFOBeep v2.0 Initializing...');
+        console.log('🛸 UFOBeep 2.01 Initializing...');
         
         // Wait for device ready
         if (window.cordova) {
@@ -49,6 +149,8 @@ class UFOBeepApp {
         setTimeout(() => {
             document.getElementById('loadingScreen').classList.remove('active');
             document.getElementById('bottomNav').classList.remove('hidden');
+            document.getElementById('screenIndicator').classList.remove('hidden');
+            this.updateUILanguage(); // Apply current language to UI
             this.showScreen('camera');
         }, 2000);
     }
@@ -61,6 +163,17 @@ class UFOBeepApp {
                 this.showScreen(screen);
             });
         });
+
+        // Screen indicator dots
+        document.querySelectorAll('.indicator-dot').forEach(dot => {
+            dot.addEventListener('click', (e) => {
+                const screen = e.target.dataset.screen;
+                this.showScreen(screen);
+            });
+        });
+
+        // Swipe gesture handling
+        this.setupSwipeGestures();
 
         // Camera capture
         document.getElementById('captureBtn').addEventListener('click', () => {
@@ -80,30 +193,214 @@ class UFOBeepApp {
             this.performRadarScan();
         });
 
-        // Settings
-        document.getElementById('countryFlag').addEventListener('change', (e) => {
-            this.settings.country = e.target.value;
+        // Settings modal
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            this.openSettingsModal();
         });
 
-        document.getElementById('enableNotifications').addEventListener('change', (e) => {
-            this.settings.notifications = e.target.checked;
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+            this.closeSettingsModal();
+        });
+
+        // Outdoor compass
+        document.getElementById('closeCompassBtn').addEventListener('click', () => {
+            this.closeOutdoorCompass();
+        });
+
+        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+            this.saveSettings();
+        });
+
+        // Modal range input
+        document.getElementById('modalAlertRange').addEventListener('input', (e) => {
+            document.getElementById('modalRangeValue').textContent = e.target.value;
+        });
+
+        // Settings (legacy - keep for profile screen)
+        const countryFlag = document.getElementById('countryFlag');
+        if (countryFlag) {
+            countryFlag.addEventListener('change', (e) => {
+                this.settings.country = e.target.value;
+            });
+        }
+
+        const enableNotifications = document.getElementById('enableNotifications');
+        if (enableNotifications) {
+            enableNotifications.addEventListener('change', (e) => {
+                this.settings.notifications = e.target.checked;
+            });
+        }
+    }
+
+    setupSwipeGestures() {
+        const app = document.getElementById('app');
+
+        // Touch start
+        app.addEventListener('touchstart', (e) => {
+            this.touchStartX = e.touches[0].clientX;
+            this.touchStartY = e.touches[0].clientY;
+            this.isSwipeGesture = false;
+        }, { passive: true });
+
+        // Touch move
+        app.addEventListener('touchmove', (e) => {
+            if (!this.touchStartX || !this.touchStartY) return;
+            
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const diffX = Math.abs(currentX - this.touchStartX);
+            const diffY = Math.abs(currentY - this.touchStartY);
+            
+            // Determine if this is a horizontal swipe
+            if (diffX > diffY && diffX > this.minSwipeDistance) {
+                this.isSwipeGesture = true;
+                // Prevent default scrolling for horizontal swipes
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Touch end
+        app.addEventListener('touchend', (e) => {
+            if (!this.touchStartX || !this.touchStartY) return;
+            
+            this.touchEndX = e.changedTouches[0].clientX;
+            this.touchEndY = e.changedTouches[0].clientY;
+            
+            this.handleSwipeGesture();
+            
+            // Reset touch values
+            this.touchStartX = 0;
+            this.touchStartY = 0;
+            this.touchEndX = 0;
+            this.touchEndY = 0;
+            this.isSwipeGesture = false;
+        }, { passive: true });
+
+        // Mouse events for desktop testing
+        let isMouseDown = false;
+        
+        app.addEventListener('mousedown', (e) => {
+            this.touchStartX = e.clientX;
+            this.touchStartY = e.clientY;
+            isMouseDown = true;
+        });
+
+        app.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            
+            const diffX = Math.abs(e.clientX - this.touchStartX);
+            const diffY = Math.abs(e.clientY - this.touchStartY);
+            
+            if (diffX > diffY && diffX > this.minSwipeDistance) {
+                this.isSwipeGesture = true;
+            }
+        });
+
+        app.addEventListener('mouseup', (e) => {
+            if (!isMouseDown) return;
+            
+            this.touchEndX = e.clientX;
+            this.touchEndY = e.clientY;
+            
+            this.handleSwipeGesture();
+            
+            isMouseDown = false;
+            this.touchStartX = 0;
+            this.touchStartY = 0;
+            this.touchEndX = 0;
+            this.touchEndY = 0;
+            this.isSwipeGesture = false;
         });
     }
 
-    showScreen(screenName) {
+    handleSwipeGesture() {
+        if (!this.isSwipeGesture) return;
+        
+        const diffX = this.touchEndX - this.touchStartX;
+        const diffY = Math.abs(this.touchEndY - this.touchStartY);
+        
+        // Only handle horizontal swipes on main screens
+        if (Math.abs(diffX) < this.minSwipeDistance || diffY > Math.abs(diffX)) return;
+        if (!this.mainScreens.includes(this.currentScreen)) return;
+        
+        if (diffX > 0) {
+            // Swipe right - go to previous screen
+            this.navigateToScreen(-1);
+        } else {
+            // Swipe left - go to next screen
+            this.navigateToScreen(1);
+        }
+    }
+
+    navigateToScreen(direction) {
+        const currentIndex = this.mainScreens.indexOf(this.currentScreen);
+        if (currentIndex === -1) return;
+        
+        let newIndex = currentIndex + direction;
+        
+        // Wrap around
+        if (newIndex < 0) {
+            newIndex = this.mainScreens.length - 1;
+        } else if (newIndex >= this.mainScreens.length) {
+            newIndex = 0;
+        }
+        
+        const newScreen = this.mainScreens[newIndex];
+        this.showScreen(newScreen, direction);
+    }
+
+    showScreen(screenName, direction = 0) {
+        const currentScreenElement = document.getElementById(`${this.currentScreen}Screen`);
+        const newScreenElement = document.getElementById(`${screenName}Screen`);
         // Update navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        document.querySelector(`[data-screen="${screenName}"]`).classList.add('active');
+        const navBtn = document.querySelector(`.nav-btn[data-screen="${screenName}"]`);
+        if (navBtn) {
+            navBtn.classList.add('active');
+        }
 
-        // Show screen
-        document.querySelectorAll('.screen').forEach(screen => {
-            screen.classList.remove('active');
+        // Update screen indicators
+        document.querySelectorAll('.indicator-dot').forEach(dot => {
+            dot.classList.remove('active');
         });
-        document.getElementById(`${screenName}Screen`).classList.add('active');
+        const indicatorDot = document.querySelector(`.indicator-dot[data-screen="${screenName}"]`);
+        if (indicatorDot) {
+            indicatorDot.classList.add('active');
+        }
+
+        // Handle animated transitions for swipe navigation
+        if (direction !== 0 && currentScreenElement && newScreenElement) {
+            // Set initial position for new screen  
+            newScreenElement.classList.remove('active', 'slide-left', 'slide-right');
+            newScreenElement.classList.add(direction > 0 ? 'slide-right' : 'slide-left');
+            
+            // Animate current screen out
+            currentScreenElement.classList.add(direction > 0 ? 'slide-left' : 'slide-right');
+            
+            // Animate new screen in
+            setTimeout(() => {
+                newScreenElement.classList.remove('slide-left', 'slide-right');
+                newScreenElement.classList.add('active');
+                
+                // Clean up old screen
+                document.querySelectorAll('.screen').forEach(screen => {
+                    if (screen !== newScreenElement) {
+                        screen.classList.remove('active', 'slide-left', 'slide-right');
+                    }
+                });
+            }, 50);
+        } else {
+            // Instant transition for navigation clicks
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active', 'slide-left', 'slide-right');
+            });
+            newScreenElement.classList.add('active');
+        }
 
         this.currentScreen = screenName;
+        this.currentScreenIndex = this.mainScreens.indexOf(screenName);
 
         // Initialize screen-specific features
         if (screenName === 'map' && \!this.map) {
@@ -472,10 +769,10 @@ class UFOBeepApp {
             this.showNotification(sightingData);
         }
         
-        // Play sound
-        if (this.settings.sounds) {
-            this.playAlertSound();
-        }
+        // Show outdoor compass for directional guidance
+        setTimeout(() => {
+            this.showOutdoorCompass(sightingData);
+        }, 1000);
         
         // Vibrate
         if (navigator.vibrate) {
@@ -659,6 +956,413 @@ class UFOBeepApp {
             xhr.open('GET', uri, true);
             xhr.send(null);
         });
+    }
+
+    openSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        
+        // Sync current settings to modal
+        document.getElementById('modalCountryFlag').value = this.settings.country;
+        document.getElementById('modalAlertRange').value = this.settings.alertRange;
+        document.getElementById('modalRangeValue').textContent = this.settings.alertRange;
+        document.getElementById('modalEnableNotifications').checked = this.settings.notifications;
+        document.getElementById('modalEnableSounds').checked = this.settings.sounds;
+        document.getElementById('modalAutoUpload').checked = this.settings.autoUpload;
+        document.getElementById('modalLanguage').value = this.settings.language;
+        
+        // Update modal text based on current language
+        document.querySelector('#settingsModal .modal-header h3').textContent = this.translate('settings.title');
+        document.querySelector('label[for="modalCountryFlag"]').textContent = this.translate('settings.country');
+        document.querySelector('label[for="modalAlertRange"]').textContent = this.translate('settings.range');
+        document.querySelector('label[for="modalEnableNotifications"]').textContent = this.translate('settings.notifications');
+        document.querySelector('label[for="modalEnableSounds"]').textContent = this.translate('settings.sounds');
+        document.querySelector('label[for="modalAutoUpload"]').textContent = this.translate('settings.autoUpload');
+        document.querySelector('label[for="modalLanguage"]').textContent = this.translate('settings.language');
+        document.querySelector('.setting-section h4').textContent = this.translate('settings.about');
+        document.getElementById('saveSettingsBtn').textContent = this.translate('settings.save');
+        document.getElementById('versionInfo').textContent = this.translate('app.version');
+        
+        modal.classList.add('active');
+    }
+
+    closeSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        modal.classList.remove('active');
+    }
+
+    saveSettings() {
+        // Get values from modal
+        const oldLanguage = this.settings.language;
+        this.settings.country = document.getElementById('modalCountryFlag').value;
+        this.settings.alertRange = parseInt(document.getElementById('modalAlertRange').value);
+        this.settings.notifications = document.getElementById('modalEnableNotifications').checked;
+        this.settings.sounds = document.getElementById('modalEnableSounds').checked;
+        this.settings.autoUpload = document.getElementById('modalAutoUpload').checked;
+        this.settings.language = document.getElementById('modalLanguage').value;
+        
+        // Update language if changed
+        if (oldLanguage !== this.settings.language) {
+            this.detectLanguage();
+            this.updateUILanguage();
+        }
+        
+        // Update main UI elements
+        const alertRange = document.getElementById('alertRange');
+        if (alertRange) {
+            alertRange.value = this.settings.alertRange;
+        }
+        
+        const rangeValue = document.getElementById('rangeValue');
+        if (rangeValue) {
+            rangeValue.textContent = this.settings.alertRange;
+        }
+        
+        const alertRangeText = document.getElementById('alertRangeText');
+        if (alertRangeText) {
+            alertRangeText.textContent = this.settings.alertRange;
+        }
+        
+        // Sync to profile screen if elements exist
+        const countryFlag = document.getElementById('countryFlag');
+        if (countryFlag) {
+            countryFlag.value = this.settings.country;
+        }
+        
+        const enableNotifications = document.getElementById('enableNotifications');
+        if (enableNotifications) {
+            enableNotifications.checked = this.settings.notifications;
+        }
+        
+        // Save to localStorage
+        localStorage.setItem('ufobeep_settings', JSON.stringify(this.settings));
+        
+        console.log('⚙️ Settings saved:', this.settings);
+        this.closeSettingsModal();
+        
+        // Show confirmation
+        if (navigator.vibrate) {
+            navigator.vibrate(100);
+        }
+    }
+
+    loadSettings() {
+        const saved = localStorage.getItem('ufobeep_settings');
+        if (saved) {
+            try {
+                const settings = JSON.parse(saved);
+                this.settings = { ...this.settings, ...settings };
+                console.log('⚙️ Settings loaded:', this.settings);
+            } catch (error) {
+                console.error('Failed to load settings:', error);
+            }
+        }
+    }
+
+    detectLanguage() {
+        if (this.settings.language === 'auto') {
+            // Detect browser language
+            const browserLang = navigator.language || navigator.userLanguage;
+            const langCode = browserLang.split('-')[0].toLowerCase();
+            
+            // Use detected language if we support it, otherwise default to English
+            if (this.languages[langCode]) {
+                this.currentLanguage = langCode;
+            } else {
+                this.currentLanguage = 'en';
+            }
+        } else if (this.languages[this.settings.language]) {
+            this.currentLanguage = this.settings.language;
+        } else {
+            this.currentLanguage = 'en';
+        }
+        
+        console.log('🌐 Language detected:', this.currentLanguage);
+    }
+
+    translate(key, replacements = {}) {
+        const strings = this.languages[this.currentLanguage]?.strings || this.languages.en.strings;
+        let text = strings[key] || key;
+        
+        // Replace placeholders like {range}
+        Object.keys(replacements).forEach(placeholder => {
+            text = text.replace(`{${placeholder}}`, replacements[placeholder]);
+        });
+        
+        return text;
+    }
+
+    updateLanguage(langCode) {
+        if (this.languages[langCode]) {
+            this.currentLanguage = langCode;
+            this.settings.language = langCode;
+            this.updateUILanguage();
+            this.saveSettings();
+        }
+    }
+
+    updateUILanguage() {
+        // Update screen headers
+        const screenHeaders = {
+            'cameraScreen': 'screen.camera',
+            'mapScreen': 'screen.map', 
+            'alertsScreen': 'screen.alerts',
+            'radarScreen': 'screen.radar',
+            'profileScreen': 'screen.profile'
+        };
+
+        Object.keys(screenHeaders).forEach(screenId => {
+            const header = document.querySelector(`#${screenId} .screen-header h2`);
+            if (header) {
+                header.textContent = this.translate(screenHeaders[screenId]);
+            }
+        });
+
+        // Update buttons
+        const captureBtn = document.getElementById('captureBtn');
+        if (captureBtn && !captureBtn.textContent.includes('SCANNING')) {
+            captureBtn.textContent = this.translate('button.capture');
+        }
+
+        const radarBtn = document.getElementById('radarScanBtn');
+        if (radarBtn && !radarBtn.textContent.includes('SCANNING')) {
+            radarBtn.textContent = this.translate('button.scan');
+        }
+
+        // Update status messages
+        const locationInfo = document.getElementById('locationInfo');
+        if (locationInfo && locationInfo.textContent.includes('Getting location')) {
+            locationInfo.textContent = this.translate('status.location');
+        }
+
+        const bearingInfo = document.getElementById('bearingInfo');
+        if (bearingInfo && bearingInfo.textContent.includes('Calibrating')) {
+            bearingInfo.textContent = this.translate('status.compass');
+        }
+
+        // Update no alerts message
+        const noAlerts = document.querySelector('.no-alerts p');
+        if (noAlerts) {
+            noAlerts.textContent = this.translate('no.alerts');
+        }
+
+        const noAlertsDesc = document.querySelector('.no-alerts small');
+        if (noAlertsDesc) {
+            noAlertsDesc.textContent = this.translate('no.alerts.desc', {range: this.settings.alertRange});
+        }
+    }
+
+    // Outdoor compass methods
+    initializeOutdoorCompass() {
+        const markingsContainer = document.getElementById('compassMarkings');
+        markingsContainer.innerHTML = '';
+
+        // Create 360 degree markings
+        for (let i = 0; i < 360; i++) {
+            const mark = document.createElement('div');
+            const isMajor = i % 30 === 0; // Major marks every 30 degrees
+            const isMinor = i % 10 === 0 && !isMajor; // Minor marks every 10 degrees
+
+            if (isMajor || isMinor) {
+                mark.className = `compass-mark ${isMajor ? 'major' : 'minor'}`;
+                mark.style.transform = `rotate(${i}deg)`;
+                markingsContainer.appendChild(mark);
+            }
+
+            // Add compass labels for cardinal and intercardinal directions
+            if (isMajor) {
+                const label = document.createElement('div');
+                label.className = 'compass-label';
+                
+                const directions = {
+                    0: 'N', 30: 'NNE', 60: 'NE', 90: 'E',
+                    120: 'ESE', 150: 'SE', 180: 'S', 210: 'SSW',
+                    240: 'SW', 270: 'W', 300: 'NW', 330: 'NNW'
+                };
+
+                if (directions[i]) {
+                    if ([0, 90, 180, 270].includes(i)) {
+                        label.classList.add('cardinal');
+                    }
+                    label.textContent = directions[i];
+                    
+                    // Position labels around the compass
+                    const radius = 120;
+                    const angle = (i - 90) * Math.PI / 180; // Offset by 90 to start at top
+                    const x = 150 + Math.cos(angle) * radius;
+                    const y = 150 + Math.sin(angle) * radius;
+                    
+                    label.style.left = x + 'px';
+                    label.style.top = y + 'px';
+                    
+                    markingsContainer.appendChild(label);
+                }
+            }
+        }
+    }
+
+    showOutdoorCompass(sightingData) {
+        const compass = document.getElementById('outdoorCompass');
+        const arrow = document.getElementById('sightingArrow');
+        const info = document.getElementById('sightingInfo');
+
+        // Initialize compass if not done
+        if (!compass.querySelector('.compass-label')) {
+            this.initializeOutdoorCompass();
+        }
+
+        // Calculate sighting direction from user location
+        if (this.userLocation && sightingData) {
+            const bearing = this.calculateBearing(
+                this.userLocation.lat, this.userLocation.lng,
+                sightingData.lat, sightingData.lon
+            );
+
+            const distance = this.calculateDistance(
+                this.userLocation.lat, this.userLocation.lng,
+                sightingData.lat, sightingData.lon
+            );
+
+            // Update sighting info
+            document.getElementById('sightingDistance').textContent = 
+                `UFO ${Math.round(distance)} km away`;
+            
+            const directionName = this.getDirectionName(bearing);
+            document.getElementById('sightingDirectionText').textContent = 
+                `Look ${directionName} (${Math.round(bearing).toString().padStart(3, '0')}°)`;
+
+            // Position and show the sighting arrow
+            arrow.style.transform = `translate(-50%, -100%) rotate(${bearing}deg)`;
+            arrow.classList.add('active');
+            info.classList.add('active');
+
+            // Play voice alert
+            this.playDirectionalAlert(distance, directionName, bearing);
+        }
+
+        compass.classList.add('active');
+        
+        // Start compass updates
+        this.startOutdoorCompassUpdates();
+    }
+
+    closeOutdoorCompass() {
+        const compass = document.getElementById('outdoorCompass');
+        compass.classList.remove('active');
+        this.stopOutdoorCompassUpdates();
+    }
+
+    startOutdoorCompassUpdates() {
+        if (this.compassUpdateInterval) return;
+
+        this.compassUpdateInterval = setInterval(() => {
+            const bearingValue = document.getElementById('outdoorBearingValue');
+            const bearingDirection = document.getElementById('outdoorBearingDirection');
+
+            if (bearingValue && bearingDirection) {
+                bearingValue.textContent = this.deviceOrientation.toString().padStart(3, '0') + '°';
+                bearingDirection.textContent = this.getDirectionName(this.deviceOrientation);
+            }
+        }, 100);
+    }
+
+    stopOutdoorCompassUpdates() {
+        if (this.compassUpdateInterval) {
+            clearInterval(this.compassUpdateInterval);
+            this.compassUpdateInterval = null;
+        }
+    }
+
+    getDirectionName(bearing) {
+        const directions = [
+            'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+            'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+        ];
+        const index = Math.round(bearing / 22.5) % 16;
+        return directions[index];
+    }
+
+    // Enhanced sound system with modular audio
+    async playDirectionalAlert(distance, direction, bearing) {
+        if (!this.settings.sounds) return;
+
+        // Try modular sound pack first
+        if (await this.playModularAlert(distance, direction, bearing)) {
+            return;
+        }
+
+        // Fallback to TTS
+        const message = this.currentLanguage === 'es' 
+            ? `OVNI avistado a ${Math.round(distance)} kilómetros hacia el ${direction}. Sal afuera y mira hacia arriba ahora.`
+            : `UFO spotted ${Math.round(distance)} kilometers ${direction} of you at bearing ${Math.round(bearing)} degrees. Go outside and look up now!`;
+
+        if (this.playVoiceAlert('custom', message)) {
+            return;
+        }
+
+        // Final fallback to enhanced tone
+        this.playAlertSound('alert');
+    }
+
+    async playModularAlert(distance, direction, bearing) {
+        // This would play the modular sound pack
+        // For now, return false to use fallback
+        return false;
+    }
+
+    playVoiceAlert(type = 'alert', customMessage = null) {
+        if (!window.speechSynthesis) return false;
+        
+        let message = customMessage;
+        
+        if (!message) {
+            // Voice alert messages by language
+            const voiceAlerts = {
+                en: {
+                    'alert': 'UFO sighting alert. New sighting reported nearby.',
+                    'success': 'Sighting reported successfully.',
+                    'error': 'Upload failed.'
+                },
+                es: {
+                    'alert': 'Alerta de avistamiento OVNI. Nuevo avistamiento reportado cerca.',
+                    'success': 'Avistamiento reportado exitosamente.',
+                    'error': 'Error en la subida.'
+                }
+            };
+            
+            const messages = voiceAlerts[this.currentLanguage] || voiceAlerts.en;
+            message = messages[type];
+        }
+        
+        if (!message) return false;
+        
+        try {
+            const utterance = new SpeechSynthesisUtterance(message);
+            
+            // Try to find appropriate voice for language
+            const voices = speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice => 
+                voice.lang.startsWith(this.currentLanguage) && voice.localService
+            ) || voices.find(voice => 
+                voice.lang.startsWith(this.currentLanguage)
+            );
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+                utterance.lang = preferredVoice.lang;
+            } else {
+                utterance.lang = this.currentLanguage === 'es' ? 'es-ES' : 'en-US';
+            }
+            
+            utterance.rate = 1.1;
+            utterance.pitch = 1.0;
+            utterance.volume = 0.8;
+            
+            speechSynthesis.speak(utterance);
+            return true;
+        } catch (error) {
+            console.log('🔇 Voice synthesis not available:', error);
+            return false;
+        }
     }
 }
 

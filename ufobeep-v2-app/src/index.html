@@ -1,27 +1,35 @@
-<\!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ufobeep.com wss://ufobeep.com https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
-    <title>UFOBeep v2.0</title>
+    <title>UFOBeep</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="app.css?v=2.01">
 </head>
 <body>
     <div id="app">
-        <\!-- Loading Screen -->
+        <!-- Loading Screen -->
         <div id="loadingScreen" class="screen active">
             <div class="loading-content">
                 <div class="ufo-logo">🛸</div>
-                <h1>UFOBeep v2.0</h1>
+                <h1>UFOBeep</h1>
                 <div class="loading-spinner"></div>
                 <p>Initializing real-time UFO network...</p>
+                <div class="version-indicator">v2.01</div>
             </div>
         </div>
 
-        <\!-- Main Navigation -->
+        <!-- Screen Position Indicator -->
+        <div id="screenIndicator" class="screen-indicator hidden">
+            <div class="indicator-dot active" data-screen="camera"></div>
+            <div class="indicator-dot" data-screen="map"></div>
+            <div class="indicator-dot" data-screen="alerts"></div>
+        </div>
+
+        <!-- Main Navigation -->
         <nav id="bottomNav" class="bottom-nav hidden">
             <button class="nav-btn active" data-screen="camera">📷</button>
             <button class="nav-btn" data-screen="map">🗺️</button>
@@ -30,11 +38,14 @@
             <button class="nav-btn" data-screen="profile">👤</button>
         </nav>
 
-        <\!-- Camera/Report Screen -->
+        <!-- Camera/Report Screen -->
         <div id="cameraScreen" class="screen">
             <div class="screen-header">
                 <h2>📷 Report Sighting</h2>
-                <div class="connection-status" id="connectionStatus">●</div>
+                <div class="header-controls">
+                    <div class="connection-status" id="connectionStatus">●</div>
+                    <button class="settings-btn" id="settingsBtn">⚙️</button>
+                </div>
             </div>
             
             <div class="camera-container">
@@ -45,7 +56,7 @@
                     </div>
                 </div>
                 
-                <\!-- AR Compass Overlay -->
+                <!-- AR Compass Overlay -->
                 <div class="ar-overlay">
                     <div class="compass" id="compass">
                         <div class="compass-needle" id="compassNeedle"></div>
@@ -64,7 +75,7 @@
             </div>
         </div>
 
-        <\!-- Live Map Screen -->
+        <!-- Live Map Screen -->
         <div id="mapScreen" class="screen">
             <div class="screen-header">
                 <h2>🗺️ Live Sightings</h2>
@@ -75,7 +86,7 @@
             <div id="liveMap" class="live-map"></div>
         </div>
 
-        <\!-- Alerts Screen -->
+        <!-- Alerts Screen -->
         <div id="alertsScreen" class="screen">
             <div class="screen-header">
                 <h2>🚨 Proximity Alerts</h2>
@@ -94,7 +105,7 @@
             </div>
         </div>
 
-        <\!-- Radar Screen -->
+        <!-- Radar Screen -->
         <div id="radarScreen" class="screen">
             <div class="screen-header">
                 <h2>📡 UFO Radar</h2>
@@ -134,7 +145,7 @@
             </div>
         </div>
 
-        <\!-- Profile Screen -->
+        <!-- Profile Screen -->
         <div id="profileScreen" class="screen">
             <div class="screen-header">
                 <h2>👤 Profile</h2>
@@ -201,9 +212,96 @@
         </div>
     </div>
 
-    <\!-- JavaScript -->
+    <!-- Outdoor Compass Overlay -->
+    <div id="outdoorCompass" class="outdoor-compass">
+        <div class="compass-markings" id="compassMarkings"></div>
+        <div class="bearing-display">
+            <div class="bearing-value" id="outdoorBearingValue">000°</div>
+            <div class="bearing-direction" id="outdoorBearingDirection">N</div>
+        </div>
+        <div class="sighting-arrow" id="sightingArrow"></div>
+        <div class="sighting-info" id="sightingInfo">
+            <div class="sighting-distance" id="sightingDistance">UFO 25 km away</div>
+            <div class="sighting-direction-text" id="sightingDirectionText">Look North Northeast (067°)</div>
+            <div class="sighting-action">Go Outside and Look Up!</div>
+        </div>
+        <button class="close-btn" id="closeCompassBtn" style="position: absolute; top: 10px; right: 10px;">✕</button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Settings</h3>
+                <button class="close-btn" id="closeSettingsBtn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>Country Flag</label>
+                    <select id="modalCountryFlag">
+                        <option value="🇺🇸">🇺🇸 United States</option>
+                        <option value="🇨🇦">🇨🇦 Canada</option>
+                        <option value="🇲🇽">🇲🇽 Mexico</option>
+                        <option value="🇧🇷">🇧🇷 Brazil</option>
+                        <option value="🇯🇵">🇯🇵 Japan</option>
+                        <option value="🇩🇪">🇩🇪 Germany</option>
+                        <option value="🇬🇧">🇬🇧 United Kingdom</option>
+                        <option value="🇦🇺">🇦🇺 Australia</option>
+                        <option value="🌍">🌍 Other</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label>Alert Range</label>
+                    <div class="range-container">
+                        <input type="range" id="modalAlertRange" min="10" max="200" value="50">
+                        <span id="modalRangeValue">50</span>km
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <label>Notifications</label>
+                    <input type="checkbox" id="modalEnableNotifications" checked>
+                </div>
+                
+                <div class="setting-item">
+                    <label>Sound Alerts</label>
+                    <input type="checkbox" id="modalEnableSounds" checked>
+                </div>
+                
+                <div class="setting-item">
+                    <label>Auto-Upload Photos</label>
+                    <input type="checkbox" id="modalAutoUpload" checked>
+                </div>
+                
+                <div class="setting-item">
+                    <label>Language</label>
+                    <select id="modalLanguage">
+                        <option value="auto">Auto-detect</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+                
+                <div class="setting-section">
+                    <h4>About</h4>
+                    <div class="about-info">
+                        <p><strong>UFOBeep</strong></p>
+                        <p id="versionInfo">Version 2.01</p>
+                        <p>Real-time UFO sighting alerts</p>
+                        <p><small>API: https://ufobeep.com</small></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="text/javascript" src="cordova.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=2.01"></script>
 </body>
 </html>
