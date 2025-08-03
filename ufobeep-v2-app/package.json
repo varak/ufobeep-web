@@ -1,0 +1,30 @@
+{
+  "name": "ufobeep-v2",
+  "version": "2.0.0",
+  "description": "UFOBeep v2.0 - Real-time UFO sighting alerts with AR compass",
+  "main": "src/index.html",
+  "scripts": {
+    "build": "cordova build android",
+    "serve": "cordova serve",
+    "prepare": "cordova prepare"
+  },
+  "keywords": ["ufo", "sightings", "alerts", "realtime", "gps"],
+  "author": "UFOBeep Team",
+  "license": "MIT",
+  "cordova": {
+    "platforms": ["android"],
+    "plugins": {
+      "cordova-plugin-camera": {},
+      "cordova-plugin-geolocation": {},
+      "cordova-plugin-device-orientation": {},
+      "cordova-plugin-vibration": {},
+      "cordova-plugin-local-notification": {},
+      "cordova-plugin-network-information": {},
+      "cordova-plugin-whitelist": {}
+    }
+  },
+  "dependencies": {
+    "cordova": "^12.0.0",
+    "cordova-android": "^12.0.0"
+  }
+}

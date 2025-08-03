@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UFOBeep - Proximity Alerts</title>
+    <!-- Favicon and Site Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: radial-gradient(ellipse at center, #000015 0%, #000000 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffcc;
+            font-size: 2rem;
+            text-shadow: 0 0 10px #00ffcc;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-panel {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ffcc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .status-label {
+            font-weight: 500;
+        }
+
+        .status-value {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffcc;
+        }
+
+        .alert-feed {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .alert-item {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #ff6600;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-item::before {
+            content: ''
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #ff6600;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #ff6600;
+            font-size: 1.1rem;
+        }
+
+        .alert-time {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .alert-details {
+            line-height: 1.6;
+        }
+
+        .alert-detail {
+            margin: 0.3rem 0;
+        }
+
+        .distance {
+            color: #ffcc00;
+            font-weight: 500;
+        }
+
+        .coordinates {
+            font-family: monospace;
+            color: #00ffcc;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0 0.5rem;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #00cba0;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .notification-permission {
+            text-align: center;
+            background: rgba(255, 102, 0, 0.1);
+            border: 1px solid #ff6600;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .alert-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .alert-time {
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 UFO Proximity Alerts</h1>
+        <p>Real-time alerts for UFO sightings near your location</p>
+    </div>
+
+    <div id="notificationPermission" class="notification-permission" style="display: none;">
+        <p><strong>Enable Notifications</strong></p>
+        <p>Allow notifications to receive instant alerts when UFO sightings occur near you.</p>
+        <button class="btn" onclick="requestNotificationPermission()">Enable Alerts</button>
+    </div>
+
+    <div class="status-panel">
+        <div class="status-item">
+            <span class="status-label">Connection Status:</span>
+            <span class="status-value" id="connectionStatus">Connecting...</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Your Location:</span>
+            <span class="status-value" id="userLocation">Getting location...</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Alert Radius:</span>
+            <span class="status-value">50 km</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Total Alerts Today:</span>
+            <span class="status-value" id="alertCount">0</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" onclick="testAlert()">Test Alert</button>
+        <button class="btn btn-secondary" onclick="clearAlerts()">Clear Feed</button>
+        <button class="btn btn-secondary" onclick="window.location.href='map.html'">View Map</button>
+    </div>
+
+    <div class="alert-feed" id="alertFeed">
+        <div style="text-align: center; color: #888; padding: 2rem;">
+            <p>No recent alerts. You'll be notified of any UFO sightings within 50km of your location.</p>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let userLocation = null;
+        let alertCount = 0;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const userId = 'alert-client-' + Math.random().toString(36).substr(2, 9);
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/${userId}`);
+
+            ws.onopen = function() {
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').style.color = '#00ff00';
+            };
+
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                if (message.type === 'proximity_alert') {
+                    handleProximityAlert(message.data);
+                }
+            };
+
+            ws.onclose = function() {
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('connectionStatus').style.color = '#ff0000';
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        function handleProximityAlert(sightingData) {
+            alertCount++;
+            document.getElementById('alertCount').textContent = alertCount;
+
+            const distance = userLocation ? 
+                calculateDistance(userLocation.lat, userLocation.lng, sightingData.lat, sightingData.lon) : 
+                null;
+
+            addAlertToFeed(sightingData, distance);
+            
+            // Browser notification
+            if (Notification.permission === 'granted') {
+                new Notification('🛸 UFO Sighting Alert', {
+                    body: `New sighting reported ${distance ? distance.toFixed(1) + 'km' : 'nearby'}. Click to view details.`,
+                    icon: '/static/ufo-icon.png'
+                });
+            }
+
+            // Audio alert
+            playAlertSound();
+        }
+
+        function addAlertToFeed(sighting, distance) {
+            const feed = document.getElementById('alertFeed');
+            
+            // Remove placeholder message
+            if (feed.children.length === 1 && feed.children[0].style.textAlign) {
+                feed.innerHTML = '';
+            }
+
+            const alertItem = document.createElement('div');
+            alertItem.className = 'alert-item';
+            alertItem.innerHTML = `
+                <div class="alert-header">
+                    <div class="alert-title">${sighting.user_flag || '🌍'} UFO Sighting Alert #${sighting.id || sighting.sighting_id}</div>
+                    <div class="alert-time">${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="alert-details">
+                    <div class="alert-detail"><strong>Location:</strong> <span class="coordinates">${sighting.lat.toFixed(4)}, ${sighting.lon.toFixed(4)}</span></div>
+                    ${distance ? `<div class="alert-detail"><strong>Distance:</strong> <span class="distance">${distance.toFixed(1)} km away</span></div>` : ''}
+                    <div class="alert-detail"><strong>Bearing:</strong> ${sighting.bearing}°</div>
+                    <div class="alert-detail"><strong>Reporter:</strong> ${sighting.device_id}</div>
+                    <div class="alert-detail"><strong>Time:</strong> ${new Date(sighting.timestamp).toLocaleString()}</div>
+                </div>
+            `;
+
+            feed.insertBefore(alertItem, feed.firstChild);
+
+            // Keep only last 10 alerts
+            while (feed.children.length > 10) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function requestNotificationPermission() {
+            Notification.requestPermission().then(function (permission) {
+                if (permission === 'granted') {
+                    document.getElementById('notificationPermission').style.display = 'none';
+                }
+            });
+        }
+
+        function testAlert() {
+            const testSighting = {
+                id: 'TEST-001',
+                lat: userLocation ? userLocation.lat + 0.01 : 40.0,
+                lon: userLocation ? userLocation.lng + 0.01 : -120.0,
+                bearing: 45,
+                timestamp: new Date().toISOString(),
+                device_id: 'test-device',
+                user_flag: '🧪'
+            };
+            
+            handleProximityAlert(testSighting);
+        }
+
+        function clearAlerts() {
+            document.getElementById('alertFeed').innerHTML = `
+                <div style="text-align: center; color: #888; padding: 2rem;">
+                    <p>Alert feed cleared. You'll be notified of any new UFO sightings within 50km of your location.</p>
+                </div>
+            `;
+            alertCount = 0;
+            document.getElementById('alertCount').textContent = alertCount;
+        }
+
+        function playAlertSound() {
+            // Create a simple beep sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Initialize
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                
+                document.getElementById('userLocation').textContent = 
+                    `${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`;
+
+                // Send location to WebSocket
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'location_update',
+                        lat: userLocation.lat,
+                        lon: userLocation.lng
+                    }));
+                }
+            }, function() {
+                document.getElementById('userLocation').textContent = 'Location access denied';
+            });
+        }
+
+        // Check notification permission
+        if (Notification.permission === 'default') {
+            document.getElementById('notificationPermission').style.display = 'block';
+        }
+
+        connectWebSocket();
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UFOBeep v2.0 - Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #00ffcc;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .debug-item {
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid #00ffcc;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .warning { color: #ffaa00; }
+    </style>
+</head>
+<body>
+    <h1>🛸 UFOBeep v2.0 Debug</h1>
+    
+    <div class="debug-item">
+        <div class="status" id="apiStatus">📡 Testing API...</div>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="debug-item">
+        <div class="status" id="wsStatus">🌐 Testing WebSocket...</div>
+        <div id="wsResult"></div>
+    </div>
+    
+    <div class="debug-item">
+        <div class="status" id="gpsStatus">📍 Testing GPS...</div>
+        <div id="gpsResult"></div>
+    </div>
+    
+    <div class="debug-item">
+        <div class="status" id="cameraStatus">📷 Testing Camera...</div>
+        <div id="cameraResult"></div>
+    </div>
+    
+    <div class="debug-item">
+        <div class="status">ℹ️ Device Info</div>
+        <div id="deviceInfo"></div>
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <a href="ufobeep-v2-app/www/" style="color: #00ffcc; text-decoration: none; padding: 10px 20px; border: 1px solid #00ffcc; border-radius: 5px;">🚀 Launch App</a>
+        <a href="map.html" style="color: #00ffcc; text-decoration: none; padding: 10px 20px; border: 1px solid #00ffcc; border-radius: 5px; margin-left: 10px;">🗺️ Test Map</a>
+    </div>
+
+    <script>
+        document.getElementById('deviceInfo').innerHTML = `
+            <strong>User Agent:</strong> ${navigator.userAgent}<br>
+            <strong>Platform:</strong> ${navigator.platform}<br>
+            <strong>Language:</strong> ${navigator.language}<br>
+            <strong>Online:</strong> ${navigator.onLine}<br>
+            <strong>Geolocation:</strong> ${\!\!navigator.geolocation}<br>
+            <strong>MediaDevices:</strong> ${\!\!navigator.mediaDevices}<br>
+            <strong>WebSocket:</strong> ${\!\!window.WebSocket}<br>
+            <strong>Notification:</strong> ${\!\!window.Notification}
+        `;
+
+        // Test API
+        fetch('https://ufobeep.com/stats')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('apiStatus').innerHTML = '📡 API: <span class="success">✅ Connected</span>';
+                document.getElementById('apiResult').innerHTML = `
+                    Total Sightings: ${data.total_sightings}<br>
+                    Recent: ${data.recent_24h}<br>
+                    Countries: ${data.countries_represented}
+                `;
+            })
+            .catch(error => {
+                document.getElementById('apiStatus').innerHTML = '📡 API: <span class="error">❌ Failed</span>';
+                document.getElementById('apiResult').innerHTML = error.message;
+            });
+
+        // Test WebSocket
+        try {
+            const ws = new WebSocket('wss://ufobeep.com/ws/debug-test');
+            
+            ws.onopen = () => {
+                document.getElementById('wsStatus').innerHTML = '🌐 WebSocket: <span class="success">✅ Connected</span>';
+                document.getElementById('wsResult').innerHTML = 'Connection established successfully';
+                ws.close();
+            };
+            
+            ws.onerror = (error) => {
+                document.getElementById('wsStatus').innerHTML = '🌐 WebSocket: <span class="error">❌ Failed</span>';
+                document.getElementById('wsResult').innerHTML = 'Connection failed: ' + error;
+            };
+            
+            ws.onclose = () => {
+                if (document.getElementById('wsResult').innerHTML === '') {
+                    document.getElementById('wsStatus').innerHTML = '🌐 WebSocket: <span class="error">❌ Closed</span>';
+                    document.getElementById('wsResult').innerHTML = 'Connection closed unexpectedly';
+                }
+            };
+        } catch (error) {
+            document.getElementById('wsStatus').innerHTML = '🌐 WebSocket: <span class="error">❌ Error</span>';
+            document.getElementById('wsResult').innerHTML = error.message;
+        }
+
+        // Test GPS
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    document.getElementById('gpsStatus').innerHTML = '📍 GPS: <span class="success">✅ Working</span>';
+                    document.getElementById('gpsResult').innerHTML = `
+                        Latitude: ${position.coords.latitude.toFixed(4)}<br>
+                        Longitude: ${position.coords.longitude.toFixed(4)}<br>
+                        Accuracy: ${position.coords.accuracy}m
+                    `;
+                },
+                (error) => {
+                    document.getElementById('gpsStatus').innerHTML = '📍 GPS: <span class="error">❌ Failed</span>';
+                    document.getElementById('gpsResult').innerHTML = error.message;
+                },
+                { timeout: 10000 }
+            );
+        } else {
+            document.getElementById('gpsStatus').innerHTML = '📍 GPS: <span class="error">❌ Not Supported</span>';
+            document.getElementById('gpsResult').innerHTML = 'Geolocation not available';
+        }
+
+        // Test Camera
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    document.getElementById('cameraStatus').innerHTML = '📷 Camera: <span class="success">✅ Available</span>';
+                    document.getElementById('cameraResult').innerHTML = 'Camera access granted';
+                    stream.getTracks().forEach(track => track.stop());
+                })
+                .catch(error => {
+                    document.getElementById('cameraStatus').innerHTML = '📷 Camera: <span class="warning">⚠️ Permission Needed</span>';
+                    document.getElementById('cameraResult').innerHTML = error.message;
+                });
+        } else {
+            document.getElementById('cameraStatus').innerHTML = '📷 Camera: <span class="error">❌ Not Supported</span>';
+            document.getElementById('cameraResult').innerHTML = 'Camera API not available';
+        }
+    </script>
+</body>
+</html>

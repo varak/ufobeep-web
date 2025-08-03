@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UFOBeep - Live Sightings Map</title>
+    <!-- Favicon and Site Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: radial-gradient(ellipse at center, #000015 0%, #000000 100%);
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ffcc;
+            position: relative;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffcc;
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px #00ffcc;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #00ffcc;
+        }
+
+        .connection-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .connected {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+
+        .disconnected {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+            border: 1px solid #ff0000;
+        }
+
+        #map {
+            height: calc(100vh - 80px);
+            width: 100%;
+        }
+
+        .custom-popup {
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            border: 1px solid #00ffcc;
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 250px;
+        }
+
+        .sighting-info h3 {
+            color: #00ffcc;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 0.5rem;
+        }
+
+        .sighting-detail {
+            margin: 0.3rem 0;
+            font-size: 0.9rem;
+        }
+
+        .user-flag {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        .distance {
+            color: #ffcc00;
+            font-weight: 500;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .alert-panel {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            padding: 1rem;
+            max-width: 300px;
+            z-index: 2000;
+            transform: translateX(320px);
+            transition: transform 0.3s ease;
+        }
+
+        .alert-panel.show {
+            transform: translateX(0);
+        }
+
+        .alert-title {
+            color: #ff6600;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: rgba(0, 0, 0, 0.9) \!important;
+            border: 1px solid #00ffcc \!important;
+            border-radius: 8px \!important;
+        }
+
+        .leaflet-popup-content {
+            color: #fff \!important;
+            margin: 10px \!important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(0, 0, 0, 0.9) \!important;
+            border: 1px solid #00ffcc \!important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛸 UFOBeep Live Map</h1>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalSightings">0</div>
+                <div>Total Sightings</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="recentSightings">0</div>
+                <div>Last 24h</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="countriesCount">0</div>
+                <div>Countries</div>
+            </div>
+            <div class="stat-item">
+                <div class="connection-status disconnected" id="wsStatus">Connecting...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="alert-panel" id="alertPanel">
+        <div class="alert-title">🚨 NEW SIGHTING ALERT</div>
+        <div id="alertContent"></div>
+    </div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([39.8283, -98.5795], 4); // Center on USA
+
+        // Add dark tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // WebSocket connection
+        let ws;
+        let userLocation = null;
+        const markers = new Map();
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const userId = 'web-client-' + Math.random().toString(36).substr(2, 9);
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/${userId}`);
+
+            ws.onopen = function() {
+                document.getElementById('wsStatus').textContent = 'Connected';
+                document.getElementById('wsStatus').className = 'connection-status connected';
+                console.log('WebSocket connected');
+            };
+
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                if (message.type === 'proximity_alert') {
+                    showProximityAlert(message.data);
+                    addSightingToMap(message.data);
+                }
+            };
+
+            ws.onclose = function() {
+                document.getElementById('wsStatus').textContent = 'Disconnected';
+                document.getElementById('wsStatus').className = 'connection-status disconnected';
+                console.log('WebSocket disconnected, attempting to reconnect...');
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function showProximityAlert(sightingData) {
+            const alertPanel = document.getElementById('alertPanel');
+            const alertContent = document.getElementById('alertContent');
+            
+            const distance = userLocation ? 
+                calculateDistance(userLocation.lat, userLocation.lng, sightingData.lat, sightingData.lon) : 
+                'Unknown';
+
+            alertContent.innerHTML = `
+                <div><strong>Location:</strong> ${sightingData.lat.toFixed(4)}, ${sightingData.lon.toFixed(4)}</div>
+                <div><strong>Distance:</strong> <span class="distance">${distance \!== 'Unknown' ? distance.toFixed(1) + ' km' : distance}</span></div>
+                <div><strong>Time:</strong> ${new Date(sightingData.timestamp).toLocaleTimeString()}</div>
+                <div><strong>Reporter:</strong> ${sightingData.user_flag || '🌍'}</div>
+            `;
+
+            alertPanel.classList.add('show');
+            setTimeout(() => {
+                alertPanel.classList.remove('show');
+            }, 5000);
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function addSightingToMap(sighting) {
+            const icon = L.divIcon({
+                html: `<div style="background: #00ffcc; border-radius: 50%; width: 20px; height: 20px; border: 2px solid #fff; box-shadow: 0 0 10px #00ffcc;"></div>`,
+                className: 'custom-marker',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            const marker = L.marker([sighting.lat, sighting.lon], { icon }).addTo(map);
+            
+            const popupContent = `
+                <div class="sighting-info">
+                    <h3>${sighting.user_flag || '🌍'} Sighting #${sighting.id || sighting.sighting_id}</h3>
+                    <div class="sighting-detail"><strong>Location:</strong> ${sighting.lat.toFixed(4)}, ${sighting.lon.toFixed(4)}</div>
+                    <div class="sighting-detail"><strong>Bearing:</strong> ${sighting.bearing}°</div>
+                    <div class="sighting-detail"><strong>Reporter:</strong> ${sighting.device_id || 'Unknown'}</div>
+                    <div class="sighting-detail timestamp">${new Date(sighting.timestamp).toLocaleString()}</div>
+                    ${sighting.filename ? `<div class="sighting-detail"><strong>Photo:</strong> ${sighting.filename}</div>` : ''}
+                </div>
+            `;
+
+            marker.bindPopup(popupContent);
+            markers.set(sighting.id || sighting.sighting_id, marker);
+        }
+
+        async function loadSightings() {
+            try {
+                const response = await fetch('/sightings?limit=100');
+                const sightings = await response.json();
+                
+                sightings.forEach(sighting => {
+                    addSightingToMap(sighting);
+                });
+
+                console.log(`Loaded ${sightings.length} sightings`);
+            } catch (error) {
+                console.error('Error loading sightings:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalSightings').textContent = stats.total_sightings;
+                document.getElementById('recentSightings').textContent = stats.recent_24h;
+                document.getElementById('countriesCount').textContent = stats.countries_represented;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Get user location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                
+                map.setView([userLocation.lat, userLocation.lng], 10);
+                
+                // Add user location marker
+                const userIcon = L.divIcon({
+                    html: `<div style="background: #ff6600; border-radius: 50%; width: 15px; height: 15px; border: 3px solid #fff; box-shadow: 0 0 15px #ff6600;"></div>`,
+                    className: 'user-marker',
+                    iconSize: [15, 15],
+                    iconAnchor: [7.5, 7.5]
+                });
+                
+                L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+                    .addTo(map)
+                    .bindPopup('<div style="color: #ff6600;"><strong>Your Location</strong></div>');
+
+                // Send location to WebSocket
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'location_update',
+                        lat: userLocation.lat,
+                        lon: userLocation.lng
+                    }));
+                }
+            });
+        }
+
+        // Initialize
+        connectWebSocket();
+        loadSightings();
+        loadStats();
+
+        // Refresh stats every 30 seconds
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+</html>

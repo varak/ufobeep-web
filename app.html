@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UFOBeep v2.0 - Get the App</title>
+    <!-- Favicon and Site Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: radial-gradient(ellipse at center, #000015 0%, #000000 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            color: #00ffcc;
+            text-shadow: 0 0 20px #00ffcc;
+            margin-bottom: 1rem;
+        }
+
+        .version-badge {
+            background: linear-gradient(45deg, #ff6600, #ff8800);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+
+        .quick-launch {
+            text-align: center;
+            margin: 2rem 0 3rem 0;
+            padding: 2rem;
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid #00ffcc;
+            border-radius: 15px;
+        }
+
+        .launch-btn {
+            background: linear-gradient(45deg, #00ffcc, #00cca0);
+            color: #000;
+            text-decoration: none;
+            padding: 1.5rem 3rem;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1.3rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            margin: 1rem 0;
+        }
+
+        .launch-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 204, 0.4);
+        }
+
+        .install-methods {
+            display: grid;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .install-card {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffcc;
+            border-radius: 15px;
+            padding: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .install-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .install-card.recommended {
+            border-color: #ff6600;
+            background: rgba(255, 102, 0, 0.1);
+        }
+
+        .method-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffcc;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .recommended .method-title {
+            color: #ff6600;
+        }
+
+        .method-icon {
+            font-size: 2rem;
+        }
+
+        .method-desc {
+            color: #ccc;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .install-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .step-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .step-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .step-title {
+            color: #00ffcc;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .step-desc {
+            color: #ccc;
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .visual-guide {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .visual-guide h4 {
+            color: #00ffcc;
+            margin-bottom: 1rem;
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+        }
+
+        .device-instructions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .device-guide {
+            background: rgba(0, 255, 204, 0.05);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .device-guide h5 {
+            color: #ff6600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .device-guide ol {
+            padding-left: 1.2rem;
+            color: #ccc;
+        }
+
+        .device-guide li {
+            margin: 0.5rem 0;
+            line-height: 1.4;
+        }
+
+        .install-btn {
+            background: linear-gradient(45deg, #00ffcc, #00cca0);
+            color: #000;
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 204, 0.4);
+        }
+
+        .recommended .install-btn {
+            background: linear-gradient(45deg, #ff6600, #ff8800);
+            color: white;
+        }
+
+        .recommended .install-btn:hover {
+            box-shadow: 0 5px 15px rgba(255, 102, 0, 0.4);
+        }
+
+        .warning {
+            background: rgba(255, 102, 0, 0.1);
+            border: 1px solid #ff6600;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #ffcc00;
+        }
+
+        .warning-icon {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        .features-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            border-color: #00ffcc;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            color: #00ffcc;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .back-link a {
+            color: #00ffcc;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            body {
+                padding: 1rem;
+            }
+
+            .install-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .device-instructions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛸 Get UFOBeep v2.0</h1>
+            <div class="version-badge">Progressive Web App - Enhanced</div>
+            <p>Real-time UFO tracking with interactive maps & push alerts</p>
+        </div>
+
+        <div class="quick-launch">
+            <h2 style="color: #00ffcc; margin-bottom: 1rem;">🚀 Try It Now!</h2>
+            <a href="ufobeep-v2-app/www/index.html" class="launch-btn" target="_blank">
+                <span style="font-size: 1.5rem;">🛸</span>
+                Launch UFOBeep v2.0
+            </a>
+            <p style="margin-top: 1rem; color: #ccc;">
+                Opens in new tab • Works on any device • No installation required
+            </p>
+        </div>
+
+        <div class="install-methods">
+            <!-- Method 1: PWA Installation -->
+            <div class="install-card recommended">
+                <div class="method-title">
+                    <span class="method-icon">📱</span>
+                    Install as Native App (Recommended)
+                </div>
+                <div class="method-desc">
+                    Install UFOBeep as a native app on your device. Works offline, sends push notifications, and appears on your home screen with a UFO icon!
+                </div>
+                
+                <div class="visual-guide">
+                    <h4>🎯 How to Install on Your Device</h4>
+                    <div class="device-instructions">
+                        <div class="device-guide">
+                            <h5>📱 iPhone/iPad</h5>
+                            <ol>
+                                <li>Open the app link above in <strong>Safari</strong></li>
+                                <li>Tap the <strong>Share</strong> button (📤)</li>
+                                <li>Select <strong>"Add to Home Screen"</strong></li>
+                                <li>Tap <strong>"Add"</strong> - UFO icon appears!</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="device-guide">
+                            <h5>🤖 Android</h5>
+                            <ol>
+                                <li>Open the app link above in <strong>Chrome</strong></li>
+                                <li>Look for install prompt OR tap menu (⋮)</li>
+                                <li>Select <strong>"Add to Home screen"</strong></li>
+                                <li>Confirm - UFO icon appears on home screen!</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="device-guide">
+                            <h5>💻 Desktop</h5>
+                            <ol>
+                                <li>Open the app link in <strong>Chrome/Edge</strong></li>
+                                <li>Look for install icon in address bar</li>
+                                <li>OR click browser menu → <strong>"Install UFOBeep"</strong></li>
+                                <li>App opens in its own window!</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="ufobeep-v2-app/www/index.html" class="install-btn" target="_blank">
+                    🚀 Open & Install App
+                </a>
+                
+                <div class="warning">
+                    <span class="warning-icon">✨</span>
+                    <strong>Best Experience:</strong> Once installed, the app works offline, sends proximity alerts, and loads instantly from your home screen!
+                </div>
+            </div>
+
+            <!-- Method 2: Browser Usage -->
+            <div class="install-card">
+                <div class="method-title">
+                    <span class="method-icon">🌐</span>
+                    Use in Browser
+                </div>
+                <div class="method-desc">
+                    Use UFOBeep directly in your web browser. All features work, but you won't get push notifications or offline access.
+                </div>
+                
+                <div class="install-steps">
+                    <div class="step-card">
+                        <span class="step-icon">🔗</span>
+                        <div class="step-title">1. Click Link</div>
+                        <div class="step-desc">Open UFOBeep in any modern web browser</div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <span class="step-icon">📍</span>
+                        <div class="step-title">2. Allow Location</div>
+                        <div class="step-desc">Grant location access for nearby UFO alerts</div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <span class="step-icon">📷</span>
+                        <div class="step-title">3. Allow Camera</div>
+                        <div class="step-desc">Enable camera to report UFO sightings</div>
+                    </div>
+                    
+                    <div class="step-card">
+                        <span class="step-icon">🔖</span>
+                        <div class="step-title">4. Bookmark</div>
+                        <div class="step-desc">Save bookmark for quick future access</div>
+                    </div>
+                </div>
+
+                <a href="ufobeep-v2-app/www/index.html" class="install-btn" target="_blank">
+                    🌐 Use in Browser
+                </a>
+            </div>
+
+            <!-- Method 3: Legacy APK -->
+            <div class="install-card">
+                <div class="method-title">
+                    <span class="method-icon">📦</span>
+                    Legacy APK (Android Only)
+                </div>
+                <div class="method-desc">
+                    Older Android APK version (v1.1) - missing v2.0 features like interactive maps and push notifications.
+                </div>
+                
+                <a href="ufobeep-v1.1.apk" class="install-btn" download>
+                    📱 Download APK (v1.1)
+                </a>
+                
+                <div class="warning">
+                    <span class="warning-icon">⚠️</span>
+                    <strong>Note:</strong> This is an outdated version. The PWA above has all the latest features and is much easier to install.
+                </div>
+            </div>
+        </div>
+
+        <div class="features-preview">
+            <div class="feature-card">
+                <div class="feature-icon">📷</div>
+                <div class="feature-title">AR Camera</div>
+                <div class="feature-desc">Report sightings with GPS coordinates and compass bearing</div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🗺️</div>
+                <div class="feature-title">Interactive Map</div>
+                <div class="feature-desc">Live UFO sightings map with day/night themes</div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🚨</div>
+                <div class="feature-title">Push Alerts</div>
+                <div class="feature-desc">Real-time notifications for nearby UFO activity</div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <div class="feature-title">Global Network</div>
+                <div class="feature-desc">Connect with UFO watchers worldwide</div>
+            </div>
+        </div>
+
+        <div class="back-link">
+            <a href="/">← Back to UFOBeep Home</a>
+        </div>
+    </div>
+</body>
+</html>

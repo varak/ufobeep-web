@@ -1,0 +1,92 @@
+[
+  {
+    "id": "UFB-0001",
+    "userFlag": "\ud83c\udde7\ud83c\uddf7",
+    "distanceKm": 209.16,
+    "time": "2025-08-02T02:16:50.647909Z",
+    "imageUrl": "",
+    "lat": 36.865567,
+    "lon": -117.091085
+  },
+  {
+    "id": "UFB-0002",
+    "userFlag": "\ud83c\uddef\ud83c\uddf5",
+    "distanceKm": 254.43,
+    "time": "2025-08-02T18:16:50.647909Z",
+    "imageUrl": "https://via.placeholder.com/400x200.png?text=UFO+Photo",
+    "lat": 40.932091,
+    "lon": -123.222811
+  },
+  {
+    "id": "UFB-0003",
+    "userFlag": "\ud83c\udde8\ud83c\udde6",
+    "distanceKm": 9.03,
+    "time": "2025-08-02T22:16:50.647909Z",
+    "imageUrl": "",
+    "lat": 36.02131,
+    "lon": -120.526153
+  },
+  {
+    "id": "UFB-0004",
+    "userFlag": "\ud83c\uddf2\ud83c\uddfd",
+    "distanceKm": 207.06,
+    "time": "2025-08-01T15:16:50.647909Z",
+    "imageUrl": "https://via.placeholder.com/400x200.png?text=UFO+Photo",
+    "lat": 40.701172,
+    "lon": -119.478447
+  },
+  {
+    "id": "UFB-0005",
+    "userFlag": "\ud83c\uddf2\ud83c\uddfd",
+    "distanceKm": 122.39,
+    "time": "2025-08-01T22:16:50.647909Z",
+    "imageUrl": "",
+    "lat": 40.974313,
+    "lon": -126.878633
+  },
+  {
+    "id": "UFB-0006",
+    "userFlag": "\ud83c\uddf2\ud83c\uddfd",
+    "distanceKm": 36.39,
+    "time": "2025-08-02T22:16:50.647909Z",
+    "imageUrl": "https://via.placeholder.com/400x200.png?text=UFO+Photo",
+    "lat": 36.772809,
+    "lon": -120.148937
+  },
+  {
+    "id": "UFB-0007",
+    "userFlag": "\ud83c\udde7\ud83c\uddf7",
+    "distanceKm": 171.26,
+    "time": "2025-08-02T00:16:50.647909Z",
+    "imageUrl": "",
+    "lat": 37.182893,
+    "lon": -122.546224
+  },
+  {
+    "id": "UFB-0008",
+    "userFlag": "\ud83c\udde7\ud83c\uddf7",
+    "distanceKm": 173.95,
+    "time": "2025-08-02T17:16:50.647909Z",
+    "imageUrl": "https://via.placeholder.com/400x200.png?text=UFO+Photo",
+    "lat": 40.126143,
+    "lon": -119.3432
+  },
+  {
+    "id": "UFB-0009",
+    "userFlag": "\ud83c\uddef\ud83c\uddf5",
+    "distanceKm": 7.75,
+    "time": "2025-08-02T06:16:50.647909Z",
+    "imageUrl": "",
+    "lat": 39.582177,
+    "lon": -126.217624
+  },
+  {
+    "id": "UFB-0010",
+    "userFlag": "\ud83c\udde9\ud83c\uddea",
+    "distanceKm": 198.41,
+    "time": "2025-08-03T00:16:50.647909Z",
+    "imageUrl": "https://via.placeholder.com/400x200.png?text=UFO+Photo",
+    "lat": 33.646804,
+    "lon": -126.615531
+  }
+]

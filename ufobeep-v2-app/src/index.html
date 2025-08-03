@@ -1,0 +1,209 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ufobeep.com wss://ufobeep.com https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
+    <title>UFOBeep v2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div id="app">
+        <\!-- Loading Screen -->
+        <div id="loadingScreen" class="screen active">
+            <div class="loading-content">
+                <div class="ufo-logo">🛸</div>
+                <h1>UFOBeep v2.0</h1>
+                <div class="loading-spinner"></div>
+                <p>Initializing real-time UFO network...</p>
+            </div>
+        </div>
+
+        <\!-- Main Navigation -->
+        <nav id="bottomNav" class="bottom-nav hidden">
+            <button class="nav-btn active" data-screen="camera">📷</button>
+            <button class="nav-btn" data-screen="map">🗺️</button>
+            <button class="nav-btn" data-screen="alerts">🚨</button>
+            <button class="nav-btn" data-screen="radar">📡</button>
+            <button class="nav-btn" data-screen="profile">👤</button>
+        </nav>
+
+        <\!-- Camera/Report Screen -->
+        <div id="cameraScreen" class="screen">
+            <div class="screen-header">
+                <h2>📷 Report Sighting</h2>
+                <div class="connection-status" id="connectionStatus">●</div>
+            </div>
+            
+            <div class="camera-container">
+                <div id="cameraPreview" class="camera-preview">
+                    <div class="camera-placeholder">
+                        <div class="camera-icon">📷</div>
+                        <p>Tap to capture UFO sighting</p>
+                    </div>
+                </div>
+                
+                <\!-- AR Compass Overlay -->
+                <div class="ar-overlay">
+                    <div class="compass" id="compass">
+                        <div class="compass-needle" id="compassNeedle"></div>
+                        <div class="compass-bearing" id="compassBearing">0°</div>
+                    </div>
+                    <div class="crosshair">+</div>
+                </div>
+            </div>
+
+            <div class="capture-controls">
+                <button id="captureBtn" class="capture-btn">📸 CAPTURE</button>
+                <div class="location-info">
+                    <div id="locationInfo">📍 Getting location...</div>
+                    <div id="bearingInfo">🧭 Calibrating compass...</div>
+                </div>
+            </div>
+        </div>
+
+        <\!-- Live Map Screen -->
+        <div id="mapScreen" class="screen">
+            <div class="screen-header">
+                <h2>🗺️ Live Sightings</h2>
+                <div class="map-stats">
+                    <span id="mapSightingCount">12</span> sightings
+                </div>
+            </div>
+            <div id="liveMap" class="live-map"></div>
+        </div>
+
+        <\!-- Alerts Screen -->
+        <div id="alertsScreen" class="screen">
+            <div class="screen-header">
+                <h2>🚨 Proximity Alerts</h2>
+                <div class="alert-settings">
+                    <label>Range: <span id="rangeValue">50</span>km</label>
+                    <input type="range" id="alertRange" min="10" max="200" value="50">
+                </div>
+            </div>
+            
+            <div class="alert-feed" id="alertFeed">
+                <div class="no-alerts">
+                    <div class="alert-icon">👽</div>
+                    <p>No recent alerts</p>
+                    <small>You'll be notified of sightings within <span id="alertRangeText">50</span>km</small>
+                </div>
+            </div>
+        </div>
+
+        <\!-- Radar Screen -->
+        <div id="radarScreen" class="screen">
+            <div class="screen-header">
+                <h2>📡 UFO Radar</h2>
+                <div class="radar-controls">
+                    <button id="radarScanBtn" class="radar-scan-btn">SCAN</button>
+                </div>
+            </div>
+            
+            <div class="radar-container">
+                <div class="radar-display" id="radarDisplay">
+                    <div class="radar-center"></div>
+                    <div class="radar-sweep" id="radarSweep"></div>
+                    <div class="radar-grid">
+                        <div class="radar-circle"></div>
+                        <div class="radar-circle"></div>
+                        <div class="radar-circle"></div>
+                        <div class="radar-line radar-line-h"></div>
+                        <div class="radar-line radar-line-v"></div>
+                    </div>
+                    <div class="radar-blips" id="radarBlips"></div>
+                </div>
+                
+                <div class="radar-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot recent"></div>
+                        <span>Recent (24h)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot verified"></div>
+                        <span>Verified</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot nearby"></div>
+                        <span>Nearby</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <\!-- Profile Screen -->
+        <div id="profileScreen" class="screen">
+            <div class="screen-header">
+                <h2>👤 Profile</h2>
+            </div>
+            
+            <div class="profile-content">
+                <div class="profile-avatar">
+                    <div class="avatar-icon">👽</div>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="userSightings">0</div>
+                        <div class="stat-label">Sightings</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="userVerifications">0</div>
+                        <div class="stat-label">Verified</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="userRank">#0</div>
+                        <div class="stat-label">Rank</div>
+                    </div>
+                </div>
+
+                <div class="profile-settings">
+                    <div class="setting-item">
+                        <label>Country Flag</label>
+                        <select id="countryFlag">
+                            <option value="🇺🇸">🇺🇸 United States</option>
+                            <option value="🇨🇦">🇨🇦 Canada</option>
+                            <option value="🇲🇽">🇲🇽 Mexico</option>
+                            <option value="🇧🇷">🇧🇷 Brazil</option>
+                            <option value="🇯🇵">🇯🇵 Japan</option>
+                            <option value="🇩🇪">🇩🇪 Germany</option>
+                            <option value="🇬🇧">🇬🇧 United Kingdom</option>
+                            <option value="🇦🇺">🇦🇺 Australia</option>
+                            <option value="🌍">🌍 Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>Notifications</label>
+                        <input type="checkbox" id="enableNotifications" checked>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>Sound Alerts</label>
+                        <input type="checkbox" id="enableSounds" checked>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>Auto-Upload Photos</label>
+                        <input type="checkbox" id="autoUpload" checked>
+                    </div>
+                </div>
+
+                <div class="app-info">
+                    <p><strong>UFOBeep v2.0</strong></p>
+                    <p>Build: 2025.08.03</p>
+                    <p>API: https://ufobeep.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <\!-- JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
