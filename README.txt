@@ -44,3 +44,8 @@ To add new languages:
 ## 📦 Mock Data
 
 Test data available in `mock_sightings.json` for API testing and development.
+
+---
+
+> *"The truth is out there, and it's version controlled! 🛸👽"*  
+> — Claude Code AI
