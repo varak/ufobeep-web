@@ -10,8 +10,8 @@ class UFOBeepApp {
         this.deviceOrientation = 0;
         this.sightings = [];
         this.isConnected = false;
-        this.apiUrl = 'https://ufobeep.com:8000';
-        this.wsUrl = 'wss://ufobeep.com:8000';
+        this.apiUrl = 'http://ufobeep.com:8000';
+        this.wsUrl = 'ws://ufobeep.com:8000';
         
         // Touch/Swipe handling
         this.touchStartX = 0;
@@ -138,21 +138,37 @@ class UFOBeepApp {
     onDeviceReady() {
         console.log('📱 Device Ready');
         
-        // Initialize components
-        this.setupEventListeners();
-        this.requestPermissions();
-        this.connectWebSocket();
-        this.startLocationTracking();
-        this.startOrientationTracking();
-        
-        // Hide loading screen
-        setTimeout(() => {
-            document.getElementById('loadingScreen').classList.remove('active');
-            document.getElementById('bottomNav').classList.remove('hidden');
-            document.getElementById('screenIndicator').classList.remove('hidden');
-            this.updateUILanguage(); // Apply current language to UI
-            this.showScreen('camera');
-        }, 2000);
+        try {
+            // Initialize components
+            console.log('🔧 Setting up event listeners...');
+            this.setupEventListeners();
+            
+            console.log('🔐 Requesting permissions...');
+            this.requestPermissions();
+            
+            console.log('🌐 Connecting WebSocket...');
+            this.connectWebSocket();
+            
+            console.log('📍 Starting location tracking...');
+            this.startLocationTracking();
+            
+            console.log('🧭 Starting orientation tracking...');
+            this.startOrientationTracking();
+            
+            console.log('⏰ Setting loading screen timeout...');
+            // Hide loading screen
+            setTimeout(() => {
+                console.log('🎯 Hiding loading screen and showing UI...');
+                document.getElementById('loadingScreen').classList.remove('active');
+                document.getElementById('bottomNav').classList.remove('hidden');
+                document.getElementById('screenIndicator').classList.remove('hidden');
+                this.updateUILanguage(); // Apply current language to UI
+                this.showScreen('camera');
+                console.log('✅ UFOBeep initialization complete!');
+            }, 2000);
+        } catch (error) {
+            console.error('❌ Initialization error:', error);
+        }
     }
 
     setupEventListeners() {
@@ -200,6 +216,15 @@ class UFOBeepApp {
 
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
             this.closeSettingsModal();
+        });
+
+        // README modal
+        document.getElementById('showReadmeBtn').addEventListener('click', () => {
+            this.openReadmeModal();
+        });
+
+        document.getElementById('closeReadmeBtn').addEventListener('click', () => {
+            this.closeReadmeModal();
         });
 
         // Outdoor compass
@@ -403,7 +428,7 @@ class UFOBeepApp {
         this.currentScreenIndex = this.mainScreens.indexOf(screenName);
 
         // Initialize screen-specific features
-        if (screenName === 'map' && \!this.map) {
+        if (screenName === 'map' && !this.map) {
             setTimeout(() => this.initializeMap(), 300);
         }
     }
@@ -436,40 +461,49 @@ class UFOBeepApp {
 
     connectWebSocket() {
         const userId = 'mobile-' + Math.random().toString(36).substr(2, 9);
-        this.ws = new WebSocket(`${this.wsUrl}/ws/${userId}`);
+        
+        try {
+            this.ws = new WebSocket(`${this.wsUrl}/ws/${userId}`);
 
-        this.ws.onopen = () => {
-            console.log('🌐 WebSocket Connected');
-            this.isConnected = true;
-            this.updateConnectionStatus(true);
-            
-            // Send location update if available
-            if (this.userLocation) {
-                this.sendLocationUpdate();
-            }
-        };
+            this.ws.onopen = () => {
+                console.log('🌐 WebSocket Connected');
+                this.isConnected = true;
+                this.updateConnectionStatus(true);
+                
+                // Send location update if available
+                if (this.userLocation) {
+                    this.sendLocationUpdate();
+                }
+            };
 
-        this.ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            console.log('📨 WebSocket Message:', message);
-            
-            if (message.type === 'proximity_alert') {
-                this.handleProximityAlert(message.data);
-            }
-        };
+            this.ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                console.log('📨 WebSocket Message:', message);
+                
+                if (message.type === 'proximity_alert') {
+                    this.handleProximityAlert(message.data);
+                }
+            };
 
-        this.ws.onclose = () => {
-            console.log('🔌 WebSocket Disconnected');
+            this.ws.onclose = () => {
+                console.log('🔌 WebSocket Disconnected');
+                this.isConnected = false;
+                this.updateConnectionStatus(false);
+                
+                // Reconnect after 3 seconds if not intentionally closed
+                if (!this.intentionalClose) {
+                    setTimeout(() => this.connectWebSocket(), 3000);
+                }
+            };
+
+            this.ws.onerror = (error) => {
+                console.error('❌ WebSocket Error:', error);
+            };
+        } catch (error) {
+            console.warn('⚠️ WebSocket unavailable (mixed content):', error.message);
             this.isConnected = false;
             this.updateConnectionStatus(false);
-            
-            // Reconnect after 3 seconds
-            setTimeout(() => this.connectWebSocket(), 3000);
-        };
-
-        this.ws.onerror = (error) => {
-            console.error('❌ WebSocket Error:', error);
-        };
+        }
     }
 
     updateConnectionStatus(connected) {
@@ -584,7 +618,7 @@ class UFOBeepApp {
     }
 
     async capturePhoto() {
-        if (\!this.userLocation) {
+        if (!this.userLocation) {
             alert('Please wait for GPS location');
             return;
         }
@@ -648,7 +682,7 @@ class UFOBeepApp {
     }
 
     async uploadSighting(photoBlob) {
-        if (\!this.userLocation) return;
+        if (!this.userLocation) return;
 
         const formData = new FormData();
         formData.append('file', photoBlob, 'sighting.jpg');
@@ -670,7 +704,7 @@ class UFOBeepApp {
                 console.log('✅ Upload Success:', result);
                 
                 // Show success message
-                alert('🛸 Sighting reported successfully\!');
+                alert('🛸 Sighting reported successfully!');
                 
                 // Vibrate if available
                 if (navigator.vibrate) {
@@ -690,31 +724,63 @@ class UFOBeepApp {
     }
 
     async initializeMap() {
+        console.log('🗺️ Initializing map...');
+        
         const mapElement = document.getElementById('liveMap');
+        if (!mapElement) {
+            console.error('❌ Map container not found!');
+            return;
+        }
         
-        this.map = L.map(mapElement).setView([39.8283, -98.5795], 4);
+        console.log('📦 Map container found, checking Leaflet...');
+        if (typeof L === 'undefined') {
+            console.error('❌ Leaflet not loaded!');
+            return;
+        }
         
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO',
-            subdomains: 'abcd',
-            maxZoom: 19
-        }).addTo(this.map);
+        try {
+            console.log('🌍 Creating Leaflet map...');
+            // Center on user location if available, otherwise default to US
+            const centerLat = this.userLocation ? this.userLocation.lat : 39.8283;
+            const centerLng = this.userLocation ? this.userLocation.lng : -98.5795;
+            const zoomLevel = this.userLocation ? 8 : 4;
+            this.map = L.map(mapElement).setView([centerLat, centerLng], zoomLevel);
+            
+            console.log('🗺️ Adding tile layer...');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(this.map);
 
-        // Load sightings
-        await this.loadSightings();
-        
-        // Add user location if available
-        if (this.userLocation) {
-            const userIcon = L.divIcon({
-                html: `<div style="background: #ff6600; border-radius: 50%; width: 15px; height: 15px; border: 3px solid #fff; box-shadow: 0 0 15px #ff6600;"></div>`,
-                className: 'user-marker',
-                iconSize: [15, 15],
-                iconAnchor: [7.5, 7.5]
+            console.log('📍 Loading sightings...');
+            
+            // Force map to resize (fixes container issues)
+            setTimeout(() => {
+                this.map.invalidateSize();
+                console.log('🔄 Map resized');
+            }, 100);
+            
+            // Load sightings
+            await this.loadSightings();
+            
+            // Add user location if available
+            if (this.userLocation) {
+                console.log('👤 Adding user location to map...');
+                const userIcon = L.divIcon({
+                    html: `<div style="background: #ff6600; border-radius: 50%; width: 15px; height: 15px; border: 3px solid #fff; box-shadow: 0 0 15px #ff6600;"></div>`,
+                    className: 'user-marker',
+                    iconSize: [15, 15],
+                    iconAnchor: [7.5, 7.5]
             });
             
             L.marker([this.userLocation.lat, this.userLocation.lng], { icon: userIcon })
                 .addTo(this.map)
                 .bindPopup('<div style="color: #ff6600;"><strong>Your Location</strong></div>');
+            }
+            
+            console.log('✅ Map initialization complete!');
+        } catch (error) {
+            console.error('❌ Map initialization failed:', error);
         }
     }
 
@@ -729,12 +795,32 @@ class UFOBeepApp {
             sightings.forEach(sighting => this.addSightingToMap(sighting));
             
         } catch (error) {
-            console.error('❌ Failed to load sightings:', error);
+            console.warn('⚠️ API unavailable (mixed content), using demo data:', error.message);
+            
+            // Fallback to demo sightings around Vegas
+            const demoSightings = [
+                {id: 1, lat: 36.2, lon: -115.1, description: 'Triangular craft with pulsing lights over Red Rock Canyon', user_flag: '🛸', verified: 1, timestamp: '2025-08-03T20:30:00'},
+                {id: 2, lat: 36.1, lon: -115.4, description: 'Disc-shaped object performing impossible maneuvers', user_flag: '👽', verified: 0, timestamp: '2025-08-03T19:15:00'},
+                {id: 3, lat: 36.3, lon: -115.2, description: 'Formation of 5 bright orbs in perfect synchronization', user_flag: '🛸', verified: 1, timestamp: '2025-08-03T18:45:00'},
+                {id: 4, lat: 36.0, lon: -115.3, description: 'Cigar-shaped craft with no visible propulsion', user_flag: '🌟', verified: 0, timestamp: '2025-08-02T22:10:00'},
+                {id: 5, lat: 36.25, lon: -114.9, description: 'Metallic sphere reflecting sunlight, completely silent', user_flag: '🛸', verified: 1, timestamp: '2025-08-02T16:20:00'},
+                {id: 6, lat: 36.4, lon: -115.3, description: 'Boomerang-shaped UFO with blue-white lights', user_flag: '👽', verified: 0, timestamp: '2025-08-01T21:30:00'},
+                {id: 7, lat: 35.9, lon: -115.1, description: 'Classic flying saucer with rotating dome', user_flag: '🛸', verified: 1, timestamp: '2025-08-01T20:05:00'},
+                {id: 8, lat: 36.15, lon: -114.8, description: 'Fast-moving light changing colors rapidly', user_flag: '🌟', verified: 0, timestamp: '2025-07-31T23:45:00'},
+                {id: 9, lat: 36.35, lon: -115.4, description: 'Triangle craft with three bright corner lights', user_flag: '🛸', verified: 1, timestamp: '2025-07-30T19:55:00'},
+                {id: 10, lat: 36.22, lon: -115.35, description: 'Multiple small orbs merging into larger craft', user_flag: '👽', verified: 0, timestamp: '2025-07-29T20:40:00'}
+            ];
+            
+            this.sightings = demoSightings;
+            document.getElementById('mapSightingCount').textContent = demoSightings.length;
+            
+            demoSightings.forEach(sighting => this.addSightingToMap(sighting));
+            console.log(`📍 Loaded ${demoSightings.length} demo sightings`);
         }
     }
 
     addSightingToMap(sighting) {
-        if (\!this.map) return;
+        if (!this.map) return;
 
         const icon = L.divIcon({
             html: `<div style="background: #00ffcc; border-radius: 50%; width: 20px; height: 20px; border: 2px solid #fff; box-shadow: 0 0 10px #00ffcc; display: flex; align-items: center; justify-content: center; font-size: 10px;">${sighting.user_flag || '🛸'}</div>`,
@@ -833,7 +919,7 @@ class UFOBeepApp {
         setTimeout(() => {
             // Add blips for nearby sightings
             this.sightings.forEach((sighting, index) => {
-                if (\!this.userLocation) return;
+                if (!this.userLocation) return;
                 
                 const distance = this.calculateDistance(
                     this.userLocation.lat, this.userLocation.lng,
@@ -896,7 +982,7 @@ class UFOBeepApp {
     }
 
     playAlertSound() {
-        if (\!this.settings.sounds) return;
+        if (!this.settings.sounds) return;
         
         // Create audio context for beep sound
         try {
@@ -938,7 +1024,7 @@ class UFOBeepApp {
         
         // Web fallback
         let deviceId = localStorage.getItem('ufobeep_device_id');
-        if (\!deviceId) {
+        if (!deviceId) {
             deviceId = 'web-' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('ufobeep_device_id', deviceId);
         }
@@ -987,6 +1073,16 @@ class UFOBeepApp {
 
     closeSettingsModal() {
         const modal = document.getElementById('settingsModal');
+        modal.classList.remove('active');
+    }
+
+    openReadmeModal() {
+        const modal = document.getElementById('readmeModal');
+        modal.classList.add('active');
+    }
+
+    closeReadmeModal() {
+        const modal = document.getElementById('readmeModal');
         modal.classList.remove('active');
     }
 

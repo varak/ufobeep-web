@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ufobeep.com wss://ufobeep.com https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ufobeep.com http://ufobeep.com:8000 ws://ufobeep.com:8000 https://ssl.gstatic.com https://unpkg.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' https://unpkg.com 'unsafe-eval'; img-src 'self' data: https://*.tile.openstreetmap.org https://*.openstreetmap.org; connect-src 'self' http://ufobeep.com:8000 ws://ufobeep.com:8000;">
     <title>UFOBeep</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -44,7 +44,6 @@
                 <h2>📷 Report Sighting</h2>
                 <div class="header-controls">
                     <div class="connection-status" id="connectionStatus">●</div>
-                    <button class="settings-btn" id="settingsBtn">⚙️</button>
                 </div>
             </div>
             
@@ -203,9 +202,14 @@
                     </div>
                 </div>
 
+                <div class="profile-actions">
+                    <button class="profile-btn settings-btn" id="settingsBtn">⚙️ Settings</button>
+                    <button class="profile-btn readme-btn" id="showReadmeBtn">📖 Documentation</button>
+                </div>
+
                 <div class="app-info">
-                    <p><strong>UFOBeep v2.0</strong></p>
-                    <p>Build: 2025.08.03</p>
+                    <p><strong>UFOBeep v2.01</strong></p>
+                    <p>Build: 2025.08.04</p>
                     <p>API: https://ufobeep.com</p>
                 </div>
             </div>
@@ -299,9 +303,66 @@
         </div>
     </div>
 
+    <!-- README Documentation Modal -->
+    <div id="readmeModal" class="modal">
+        <div class="modal-content readme-modal">
+            <div class="modal-header">
+                <h3>📖 UFOBeep Documentation</h3>
+                <button class="close-btn" id="closeReadmeBtn">✕</button>
+            </div>
+            <div class="modal-body readme-content">
+                <h2>🚀 Key Features</h2>
+                
+                <h3>Navigation & Interface</h3>
+                <ul>
+                    <li><strong>Swipe Navigation</strong>: Touch gesture navigation between screens</li>
+                    <li><strong>Screen Position Indicators</strong>: Visual dots showing current screen</li>
+                    <li><strong>Settings Modal</strong>: Gear icon access to preferences</li>
+                    <li><strong>Responsive Design</strong>: Optimized for all devices</li>
+                </ul>
+                
+                <h3>Location & Mapping</h3>
+                <ul>
+                    <li><strong>Interactive Map</strong>: Live sightings with clickable UFO markers</li>
+                    <li><strong>Auto-Centering</strong>: Map centers on your GPS location</li>
+                    <li><strong>Demo Sightings</strong>: Sample data when API unavailable</li>
+                    <li><strong>Location Tracking</strong>: Real-time GPS positioning</li>
+                </ul>
+                
+                <h3>Outdoor Compass System</h3>
+                <ul>
+                    <li><strong>Precision Compass</strong>: 360-degree bearing display</li>
+                    <li><strong>Sighting Direction</strong>: Orange arrow pointing toward UFOs</li>
+                    <li><strong>Live Updates</strong>: Real-time compass rotation</li>
+                    <li><strong>Go Outside Mode</strong>: Full-screen compass for outdoor tracking</li>
+                </ul>
+                
+                <h3>Multilingual Support</h3>
+                <ul>
+                    <li><strong>Auto-Detection</strong>: Detects browser language preference</li>
+                    <li><strong>English/Spanish</strong>: Complete UI translation</li>
+                    <li><strong>Voice Alerts</strong>: Text-to-speech in multiple languages</li>
+                    <li><strong>Sound Packs</strong>: Professional voice generation system</li>
+                </ul>
+                
+                <h3>Audio & Voice System</h3>
+                <ul>
+                    <li><strong>Dynamic Alerts</strong>: "UFO spotted X km [direction] - go outside!"</li>
+                    <li><strong>TTS Fallback</strong>: Browser text-to-speech when needed</li>
+                    <li><strong>Tone Beeps</strong>: Audio beep fallback for silent mode</li>
+                    <li><strong>ElevenLabs Ready</strong>: Professional voice generation</li>
+                </ul>
+                
+                <div class="readme-quote">
+                    <em>"The truth is out there, and it's version controlled! 🛸👽"</em><br>
+                    — Claude Code AI
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="text/javascript" src="cordova.js"></script>
     <script src="app.js?v=2.01"></script>
 </body>
 </html>

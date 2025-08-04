@@ -522,6 +522,9 @@ body {
 /* Live Map */
 .live-map {
     flex: 1;
+    height: 100%;
+    min-height: 400px;
+    background: #000;
 }
 
 .map-stats {
@@ -820,6 +823,32 @@ body {
     accent-color: #00ffcc;
 }
 
+.profile-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.profile-btn {
+    background: rgba(0, 255, 204, 0.1);
+    border: 1px solid #00ffcc;
+    color: #00ffcc;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-btn:hover {
+    background: rgba(0, 255, 204, 0.2);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+}
+
 .app-info {
     text-align: center;
     color: #666;
@@ -1019,4 +1048,66 @@ body {
 .about-info strong {
     color: #00ffcc;
     font-family: 'Orbitron', sans-serif;
+}
+
+.readme-btn {
+    margin-top: 15px;
+    background: rgba(0, 255, 204, 0.1);
+    border: 1px solid #00ffcc;
+    color: #00ffcc;
+    font-size: 0.9rem;
+}
+
+.readme-btn:hover {
+    background: rgba(0, 255, 204, 0.2);
+}
+
+/* README Modal Styles */
+.readme-modal {
+    max-width: 600px;
+    max-height: 85vh;
+}
+
+.readme-content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.readme-content h2 {
+    color: #00ffcc;
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.readme-content h3 {
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    margin: 20px 0 10px 0;
+    font-size: 1rem;
+}
+
+.readme-content ul {
+    margin: 0 0 20px 20px;
+    padding: 0;
+}
+
+.readme-content li {
+    margin: 8px 0;
+    color: #ccc;
+}
+
+.readme-content strong {
+    color: #00ffcc;
+}
+
+.readme-quote {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(0, 255, 204, 0.1);
+    border: 1px solid rgba(0, 255, 204, 0.3);
+    border-radius: 10px;
+    text-align: center;
+    color: #00ffcc;
+    font-style: italic;
 }
