@@ -209,8 +209,8 @@ class UFOBeepApp {
             this.performRadarScan();
         });
 
-        // Settings modal
-        document.getElementById('settingsBtn').addEventListener('click', () => {
+        // Settings modal (from profile page)
+        document.getElementById('profileSettingsBtn').addEventListener('click', () => {
             this.openSettingsModal();
         });
 
@@ -218,8 +218,8 @@ class UFOBeepApp {
             this.closeSettingsModal();
         });
 
-        // README modal
-        document.getElementById('showReadmeBtn').addEventListener('click', () => {
+        // README modal (from profile page)
+        document.getElementById('profileReadmeBtn').addEventListener('click', () => {
             this.openReadmeModal();
         });
 
